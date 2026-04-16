@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "Clippy",
+    "slug": "clippy",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "clippy",
+    "userInterfaceStyle": "light",
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
