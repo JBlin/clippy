@@ -6,6 +6,13 @@ export function formatDateLabel(value: string) {
   }).format(new Date(value));
 }
 
+export function formatCardDateLabel(value: string) {
+  return new Intl.DateTimeFormat('ko-KR', {
+    month: 'numeric',
+    day: 'numeric',
+  }).format(new Date(value));
+}
+
 export function formatDateTimeLabel(value: string) {
   return new Intl.DateTimeFormat('ko-KR', {
     year: 'numeric',

@@ -11,9 +11,11 @@ export const LINK_PLATFORMS = [
 
 export type LinkPlatform = (typeof LINK_PLATFORMS)[number];
 
-export const LINK_CATEGORIES = ['업무', '아이디어', '공부', '쇼핑', '나중에보기', '기타'] as const;
+export const DEFAULT_LINK_CATEGORIES = ['업무', '아이디어', '공부', '쇼핑', '나중에보기', '기타'] as const;
 
-export type LinkCategory = (typeof LINK_CATEGORIES)[number];
+export const LINK_CATEGORIES = DEFAULT_LINK_CATEGORIES;
+
+export type LinkCategory = string;
 
 export const SORT_OPTIONS = [
   { label: '최신순', value: 'latest' },

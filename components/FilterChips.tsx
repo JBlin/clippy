@@ -11,12 +11,14 @@ interface FilterChipsProps<T extends string> {
   options: FilterChipOption<T>[];
   activeValue: T;
   onChange: (value: T) => void;
+  compact?: boolean;
 }
 
 export function FilterChips<T extends string>({
   options,
   activeValue,
   onChange,
+  compact = false,
 }: FilterChipsProps<T>) {
   return (
     <ScrollView
@@ -38,15 +40,15 @@ export function FilterChips<T extends string>({
                 borderRadius: radius.pill,
                 borderWidth: 1,
                 opacity: pressed ? 0.88 : 1,
-                paddingHorizontal: 14,
-                paddingVertical: 10,
+                paddingHorizontal: compact ? 12 : 14,
+                paddingVertical: compact ? 8 : 10,
               })}
             >
               <Text
                 style={{
                   ...textStyle('700'),
                   color: isActive ? colors.surface : colors.textMuted,
-                  fontSize: 13,
+                  fontSize: compact ? 12 : 13,
                 }}
               >
                 {option.label}

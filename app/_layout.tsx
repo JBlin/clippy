@@ -1,10 +1,10 @@
+import { useEffect } from 'react';
 import { ActivityIndicator, Platform, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
-import { useEffect } from 'react';
 
 import { colors, fontFamily, textStyle } from '@/constants/theme';
 import { useLinkStore } from '@/store/useLinkStore';
@@ -47,7 +47,7 @@ export default function RootLayout() {
           >
             <ActivityIndicator color={colors.accent} size="large" />
             <Text style={{ ...textStyle('600'), color: colors.textMuted, fontSize: 14 }}>
-              Clippy를 준비하고 있어요
+              Clippy를 준비하고 있어요.
             </Text>
           </View>
         </SafeAreaProvider>
@@ -71,6 +71,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="link/[id]" options={{ title: '링크 상세' }} />
           <Stack.Screen name="link/edit/[id]" options={{ title: '링크 수정' }} />
+          <Stack.Screen name="settings/categories" options={{ title: '카테고리 관리' }} />
         </Stack>
       </SafeAreaProvider>
     </GestureHandlerRootView>

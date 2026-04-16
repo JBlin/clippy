@@ -19,14 +19,7 @@ const PLATFORM_HOSTS: Record<LinkPlatform, string[]> = {
     'joongang.co.kr',
     'chosun.com',
   ],
-  Shopping: [
-    'amazon.',
-    'coupang.com',
-    '11st.co.kr',
-    'gmarket.co.kr',
-    'musinsa.com',
-    'shopping.naver.com',
-  ],
+  Shopping: ['amazon.', 'coupang.com', '11st.co.kr', 'gmarket.co.kr', 'musinsa.com', 'shopping.naver.com'],
   Other: [],
 };
 
@@ -64,6 +57,9 @@ const PATH_STOP_WORDS = new Set([
   'products',
   'vp',
   'news',
+  'shorts',
+  'embed',
+  'live',
 ]);
 
 const DEFAULT_SUMMARY_BY_PLATFORM: Record<LinkPlatform, string> = {
@@ -71,7 +67,7 @@ const DEFAULT_SUMMARY_BY_PLATFORM: Record<LinkPlatform, string> = {
   Instagram: '저장한 소셜 콘텐츠 링크입니다.',
   X: '저장한 소셜 콘텐츠 링크입니다.',
   TikTok: '저장한 소셜 콘텐츠 링크입니다.',
-  Blog: '저장한 블로그 링크입니다. 읽고 난 뒤 핵심 포인트를 메모로 남겨보세요.',
+  Blog: '저장한 블로그 링크입니다. 읽고 싶은 포인트를 메모로 남겨보세요.',
   News: '저장한 기사 링크입니다. 핵심 내용을 메모로 정리해보세요.',
   Shopping: '저장한 상품 링크입니다. 가격/비교 포인트를 메모로 남겨보세요.',
   Other: '저장한 링크입니다.',
@@ -142,7 +138,6 @@ export function getHostnameLabel(input: string) {
   }
 
   const hostname = parsed.hostname.replace(/^www\./, '');
-
   return FRIENDLY_HOST_LABELS[hostname] ?? hostname;
 }
 
@@ -163,7 +158,7 @@ function isOpaqueSegment(segment: string) {
   return /^[a-z0-9]{6,}$/i.test(segment) && !/[aeiou]/i.test(segment);
 }
 
-function isYouTubeVideoId(segment: string) {
+function isValidYoutubeVideoId(segment: string) {
   return /^[A-Za-z0-9_-]{11}$/.test(segment);
 }
 
@@ -196,10 +191,7 @@ export function extractInstagramContentInfo(input: string) {
     return null;
   }
 
-  return {
-    kind,
-    shortcode,
-  };
+  return { kind, shortcode };
 }
 
 function pickMeaningfulSegment(parsed: URL) {
@@ -221,7 +213,7 @@ function pickMeaningfulSegment(parsed: URL) {
       continue;
     }
 
-    if (isYouTubeVideoId(rawSegment)) {
+    if (isValidYoutubeVideoId(rawSegment)) {
       continue;
     }
 
@@ -235,18 +227,59 @@ function pickMeaningfulSegment(parsed: URL) {
   return '';
 }
 
+export function extractYoutubeVideoId(input: string) {
+  const parsed = safeParseUrl(input);
+
+  if (!parsed) {
+    return '';
+  }
+
+  const hostname = parsed.hostname.replace(/^www\./, '').toLowerCase();
+
+  if (hostname === 'youtu.be') {
+    const candidate = parsed.pathname.split('/').filter(Boolean)[0] ?? '';
+    return isValidYoutubeVideoId(candidate) ? candidate : '';
+  }
+
+  if (!hostname.includes('youtube.com')) {
+    return '';
+  }
+
+  const paramVideoId = parsed.searchParams.get('v') ?? '';
+
+  if (isValidYoutubeVideoId(paramVideoId)) {
+    return paramVideoId;
+  }
+
+  const segments = parsed.pathname.split('/').filter(Boolean);
+  const knownContainerIndex = segments.findIndex((segment) => ['shorts', 'embed', 'live', 'v'].includes(segment));
+
+  if (knownContainerIndex >= 0) {
+    const candidate = segments[knownContainerIndex + 1] ?? '';
+    return isValidYoutubeVideoId(candidate) ? candidate : '';
+  }
+
+  return '';
+}
+
 export function createFallbackTitle(input: string, platform?: LinkPlatform) {
   const parsed = safeParseUrl(input);
 
   if (!parsed) {
-    return '새 링크';
+    return '저장한 링크';
   }
 
   const candidate = pickMeaningfulSegment(parsed);
   const hostname = getHostnameLabel(input);
 
-  if (platform === 'YouTube' && extractYoutubeVideoId(input)) {
-    return 'YouTube 영상';
+  if (platform === 'YouTube') {
+    if (candidate) {
+      return `${titleCaseLatin(candidate)} | YouTube`;
+    }
+
+    if (extractYoutubeVideoId(input)) {
+      return 'YouTube 영상 다시 보기';
+    }
   }
 
   if (platform === 'Instagram') {
@@ -266,30 +299,10 @@ export function createFallbackTitle(input: string, platform?: LinkPlatform) {
   }
 
   if (platform && platform !== 'Other') {
-    return `${platform} 링크`;
+    return `${hostname} 링크`;
   }
 
   return `${hostname} 링크`;
-}
-
-export function extractYoutubeVideoId(input: string) {
-  const parsed = safeParseUrl(input);
-
-  if (!parsed) {
-    return '';
-  }
-
-  const hostname = parsed.hostname.replace(/^www\./, '');
-
-  if (hostname === 'youtu.be') {
-    return parsed.pathname.replace('/', '');
-  }
-
-  if (hostname.includes('youtube.com')) {
-    return parsed.searchParams.get('v') ?? '';
-  }
-
-  return '';
 }
 
 export function getEmbeddedPlayableUrl(input: string, platform?: LinkPlatform) {
@@ -351,6 +364,10 @@ export function isLikelyAutoTitle(title: string, input: string, platform: LinkPl
     if (videoId && trimmedTitle === videoId) {
       return true;
     }
+
+    if (trimmedTitle === 'YouTube 영상' || trimmedTitle === 'YouTube 영상 다시 보기') {
+      return true;
+    }
   }
 
   return false;
@@ -364,8 +381,9 @@ export async function fetchLinkMetadata(input: string, signal?: AbortSignal): Pr
   }
 
   const platform = detectPlatform(normalizedUrl);
+  const videoId = extractYoutubeVideoId(normalizedUrl);
 
-  if (platform !== 'YouTube' || !extractYoutubeVideoId(normalizedUrl)) {
+  if (platform !== 'YouTube' || !videoId) {
     return null;
   }
 
@@ -387,11 +405,31 @@ export async function fetchLinkMetadata(input: string, signal?: AbortSignal): Pr
     return {
       embedUrl: getEmbeddedPlayableUrl(normalizedUrl, platform),
       thumbnailUrl: data.thumbnail_url?.trim() || buildThumbnailUrl(normalizedUrl, platform),
-      title: data.title?.trim(),
+      title: data.title?.trim() || createFallbackTitle(normalizedUrl, platform),
     };
   } catch {
     return null;
   }
+}
+
+export function getReadableUrl(input: string, maxLength = 52) {
+  const parsed = safeParseUrl(input);
+
+  if (!parsed) {
+    return input;
+  }
+
+  const hostname = parsed.hostname.replace(/^www\./, '');
+  const pathname = parsed.pathname.replace(/\/$/, '');
+  const videoId = extractYoutubeVideoId(input);
+  const searchPart = videoId ? `?v=${videoId}` : '';
+  const readable = `${hostname}${pathname}${searchPart}` || hostname;
+
+  if (readable.length <= maxLength) {
+    return readable;
+  }
+
+  return `${readable.slice(0, Math.max(0, maxLength - 1))}…`;
 }
 
 export function deriveLinkPreview(input: string): DerivedLinkPreview {
@@ -432,6 +470,5 @@ export function deriveLinkPreview(input: string): DerivedLinkPreview {
 
 export function isValidLinkUrl(input: string) {
   const parsed = safeParseUrl(input);
-
   return Boolean(parsed && ['http:', 'https:'].includes(parsed.protocol));
 }

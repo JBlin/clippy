@@ -1,24 +1,41 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { DEFAULT_LINK_CATEGORIES } from '@/constants/linkOptions';
 import type { LinkFormValues, LinkItem } from '@/features/links/types';
 import { useLinkMetadata } from '@/hooks/useLinkMetadata';
 import { deriveLinkPreview } from '@/utils/url';
 
-const EMPTY_FORM: LinkFormValues = {
-  originalUrl: '',
-  detectedPlatform: 'Other',
-  title: '',
-  thumbnailUrl: '',
-  summary: '',
-  category: '기타',
-  tags: [],
-  memo: '',
-  isFavorite: false,
-};
+function getFallbackCategory(categories: string[]) {
+  return categories[0] ?? DEFAULT_LINK_CATEGORIES[DEFAULT_LINK_CATEGORIES.length - 1] ?? '기타';
+}
 
-function toFormValues(item?: LinkItem): LinkFormValues {
+function resolveCategory(category: string | undefined, categories: string[]) {
+  const nextCategory = category?.trim();
+
+  if (nextCategory && categories.includes(nextCategory)) {
+    return nextCategory;
+  }
+
+  return getFallbackCategory(categories);
+}
+
+function createEmptyForm(categories: string[]): LinkFormValues {
+  return {
+    originalUrl: '',
+    detectedPlatform: 'Other',
+    title: '',
+    thumbnailUrl: '',
+    summary: '',
+    category: getFallbackCategory(categories),
+    tags: [],
+    memo: '',
+    isFavorite: false,
+  };
+}
+
+function toFormValues(item: LinkItem | undefined, categories: string[]): LinkFormValues {
   if (!item) {
-    return EMPTY_FORM;
+    return createEmptyForm(categories);
   }
 
   return {
@@ -27,31 +44,32 @@ function toFormValues(item?: LinkItem): LinkFormValues {
     title: item.title,
     thumbnailUrl: item.thumbnailUrl,
     summary: item.summary,
-    category: item.category,
+    category: resolveCategory(item.category, categories),
     tags: item.tags,
     memo: item.memo,
     isFavorite: item.isFavorite,
   };
 }
 
-export function useLinkFormState(item?: LinkItem) {
-  const initialValues = useMemo(() => toFormValues(item), [item]);
-  const [form, setForm] = useState<LinkFormValues>(initialValues);
-  const initialPreview = useMemo(
-    () => deriveLinkPreview(item?.originalUrl ?? ''),
-    [item?.originalUrl],
+export function useLinkFormState(categories: string[], item?: LinkItem) {
+  const resolvedCategories = useMemo(
+    () => (categories.length ? categories : [...DEFAULT_LINK_CATEGORIES]),
+    [categories],
   );
+  const initialValues = useMemo(() => toFormValues(item, resolvedCategories), [item, resolvedCategories]);
+  const [form, setForm] = useState<LinkFormValues>(initialValues);
+  const initialPreview = useMemo(() => deriveLinkPreview(item?.originalUrl ?? ''), [item?.originalUrl]);
   const preview = useMemo(() => deriveLinkPreview(form.originalUrl), [form.originalUrl]);
   const { isLoading: isEnriching, metadata } = useLinkMetadata(form.originalUrl);
   const autoTitleRef = useRef(initialPreview.title);
-  const autoCategoryRef = useRef(initialPreview.suggestedCategory);
+  const autoCategoryRef = useRef(resolveCategory(initialPreview.suggestedCategory, resolvedCategories));
   const autoSummaryRef = useRef(initialPreview.summaryTemplate);
   const autoThumbnailRef = useRef(initialPreview.thumbnailUrl);
 
   useEffect(() => {
     setForm(initialValues);
     autoTitleRef.current = initialPreview.title;
-    autoCategoryRef.current = initialPreview.suggestedCategory;
+    autoCategoryRef.current = resolveCategory(initialPreview.suggestedCategory, resolvedCategories);
     autoSummaryRef.current = initialPreview.summaryTemplate;
     autoThumbnailRef.current = initialPreview.thumbnailUrl;
   }, [
@@ -60,15 +78,20 @@ export function useLinkFormState(item?: LinkItem) {
     initialPreview.thumbnailUrl,
     initialPreview.title,
     initialValues,
+    resolvedCategories,
   ]);
 
   useEffect(() => {
+    const suggestedCategory = resolveCategory(preview.suggestedCategory, resolvedCategories);
+
     setForm((current) => {
       const nextTitle =
         !current.title || current.title === autoTitleRef.current ? preview.title : current.title;
       const nextCategory =
-        !current.category || current.category === autoCategoryRef.current
-          ? preview.suggestedCategory
+        !current.category ||
+        current.category === autoCategoryRef.current ||
+        !resolvedCategories.includes(current.category)
+          ? suggestedCategory
           : current.category;
       const nextSummary =
         !current.summary || current.summary === autoSummaryRef.current
@@ -88,8 +111,9 @@ export function useLinkFormState(item?: LinkItem) {
         summary: nextSummary,
       };
     });
+
     autoTitleRef.current = preview.title;
-    autoCategoryRef.current = preview.suggestedCategory;
+    autoCategoryRef.current = suggestedCategory;
     autoSummaryRef.current = preview.summaryTemplate;
     autoThumbnailRef.current = preview.thumbnailUrl;
   }, [
@@ -98,7 +122,21 @@ export function useLinkFormState(item?: LinkItem) {
     preview.summaryTemplate,
     preview.thumbnailUrl,
     preview.title,
+    resolvedCategories,
   ]);
+
+  useEffect(() => {
+    setForm((current) => {
+      if (resolvedCategories.includes(current.category)) {
+        return current;
+      }
+
+      return {
+        ...current,
+        category: getFallbackCategory(resolvedCategories),
+      };
+    });
+  }, [resolvedCategories]);
 
   useEffect(() => {
     if (!metadata) {
@@ -137,9 +175,10 @@ export function useLinkFormState(item?: LinkItem) {
   }
 
   function resetForm() {
-    setForm(EMPTY_FORM);
+    const nextEmptyForm = createEmptyForm(resolvedCategories);
+    setForm(nextEmptyForm);
     autoTitleRef.current = '';
-    autoCategoryRef.current = '기타';
+    autoCategoryRef.current = nextEmptyForm.category;
     autoSummaryRef.current = '';
     autoThumbnailRef.current = '';
   }

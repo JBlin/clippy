@@ -25,7 +25,7 @@ export function getLinkCardSnippet(item: LinkItem) {
     return `${summary} · ${memo}`;
   }
 
-  return summary || memo || '아직 요약이나 메모가 없는 링크예요.';
+  return summary || memo || '요약이나 메모가 아직 없는 링크예요.';
 }
 
 export function countActiveQueryFilters(options: LinkQueryOptions) {
@@ -40,6 +40,10 @@ export function countActiveQueryFilters(options: LinkQueryOptions) {
   }
 
   if (options.category && options.category !== 'all') {
+    count += 1;
+  }
+
+  if (options.favoritesOnly) {
     count += 1;
   }
 

@@ -10,6 +10,7 @@ interface EmptyStateProps {
   actionLabel?: string;
   onAction?: () => void;
   icon?: keyof typeof Ionicons.glyphMap;
+  compact?: boolean;
 }
 
 export function EmptyState({
@@ -18,6 +19,7 @@ export function EmptyState({
   actionLabel,
   onAction,
   icon = 'albums-outline',
+  compact = false,
 }: EmptyStateProps) {
   return (
     <View
@@ -27,8 +29,8 @@ export function EmptyState({
         borderColor: colors.border,
         borderRadius: radius.lg,
         borderWidth: 1,
-        gap: 12,
-        padding: 24,
+        gap: compact ? 10 : 12,
+        padding: compact ? 18 : 24,
       }}
     >
       <View
@@ -36,26 +38,28 @@ export function EmptyState({
           alignItems: 'center',
           backgroundColor: colors.accentMuted,
           borderRadius: 999,
-          height: 56,
+          height: compact ? 46 : 56,
           justifyContent: 'center',
-          width: 56,
+          width: compact ? 46 : 56,
         }}
       >
-        <Ionicons color={colors.accent} name={icon} size={28} />
+        <Ionicons color={colors.accent} name={icon} size={compact ? 22 : 28} />
       </View>
-      <Text style={{ ...textStyle('800'), color: colors.text, fontSize: 18 }}>{title}</Text>
+      <Text style={{ ...textStyle('800'), color: colors.text, fontSize: compact ? 16 : 18 }}>{title}</Text>
       <Text
         style={{
           ...textStyle('400'),
           color: colors.textMuted,
-          fontSize: 14,
-          lineHeight: 22,
+          fontSize: compact ? 13 : 14,
+          lineHeight: compact ? 20 : 22,
           textAlign: 'center',
         }}
       >
         {description}
       </Text>
-      {actionLabel && onAction ? <AppButton label={actionLabel} onPress={onAction} variant="secondary" /> : null}
+      {actionLabel && onAction ? (
+        <AppButton compact={compact} label={actionLabel} onPress={onAction} variant="secondary" />
+      ) : null}
     </View>
   );
 }

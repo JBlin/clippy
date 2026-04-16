@@ -3,24 +3,24 @@ import { Platform } from 'react-native';
 import type { LinkPlatform } from '@/constants/linkOptions';
 
 export const colors = {
-  background: '#F4F7F9',
+  background: '#F6F5FF',
   surface: '#FFFFFF',
-  surfaceMuted: '#EEF3F6',
-  border: '#D9E2E8',
-  text: '#14202B',
-  textMuted: '#5F6E7C',
-  textSoft: '#7C8B99',
-  accent: '#1F7A61',
-  accentMuted: '#E7F5F0',
-  info: '#2563EB',
-  infoMuted: '#E8F0FF',
+  surfaceMuted: '#F1EEFF',
+  border: '#DED9FF',
+  text: '#1E1B3A',
+  textMuted: '#66618D',
+  textSoft: '#8A84B3',
+  accent: '#5E50FA',
+  accentMuted: '#ECE9FF',
+  info: '#4F46E5',
+  infoMuted: '#ECEBFF',
   warning: '#C07A12',
   warningMuted: '#FFF5E7',
   danger: '#C63D3D',
   dangerMuted: '#FDECEC',
   success: '#0E9F6E',
   successMuted: '#E8FFF5',
-  shadow: 'rgba(20, 32, 43, 0.08)',
+  shadow: 'rgba(47, 39, 124, 0.10)',
 };
 
 export const spacing = {
@@ -33,9 +33,9 @@ export const spacing = {
 };
 
 export const radius = {
-  sm: 10,
-  md: 16,
-  lg: 22,
+  sm: 8,
+  md: 12,
+  lg: 14,
   pill: 999,
 };
 
@@ -47,19 +47,19 @@ export const platformColors: Record<
   Instagram: { background: '#FFF0F7', border: '#F7C5DD', text: '#B42372' },
   X: { background: '#EEF2F6', border: '#D0D8E0', text: '#1F2937' },
   TikTok: { background: '#EEFDF8', border: '#C8F2E2', text: '#0F766E' },
-  Blog: { background: '#F4F5FF', border: '#D6DAFF', text: '#4C51BF' },
-  News: { background: '#EFF6FF', border: '#CDE1FF', text: '#1D4ED8' },
+  Blog: { background: '#F1F0FF', border: '#D8D4FF', text: '#5B50D6' },
+  News: { background: '#EEF1FF', border: '#D6DBFF', text: '#4654D8' },
   Shopping: { background: '#FFF7E8', border: '#F7DEAF', text: '#B45309' },
-  Other: { background: '#F3F4F6', border: '#D1D5DB', text: '#4B5563' },
+  Other: { background: '#F1EEFF', border: '#D8D1FF', text: '#5E50FA' },
 };
 
 export const shadows = {
   card: {
-    shadowColor: '#14202B',
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 3,
+    shadowColor: '#2F277C',
+    shadowOpacity: 0.1,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 4,
   },
 };
 

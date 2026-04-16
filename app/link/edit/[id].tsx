@@ -1,5 +1,5 @@
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Alert } from 'react-native';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/components/EmptyState';
@@ -14,9 +14,10 @@ export default function EditLinkScreen() {
   const { id: routeId } = useLocalSearchParams<{ id?: string | string[] }>();
   const router = useRouter();
   const id = getSingleParam(routeId);
+  const categories = useLinkStore((state) => state.categories);
   const item = useLinkStore((state) => (id ? state.items.find((entry) => entry.id === id) : undefined));
   const updateLink = useLinkStore((state) => state.updateLink);
-  const { form, isEnriching, preview, updateField } = useLinkFormState(item);
+  const { form, isEnriching, preview, updateField } = useLinkFormState(categories, item);
   const validationMessage = validateLinkForm(form);
 
   if (!item) {
@@ -33,15 +34,17 @@ export default function EditLinkScreen() {
     );
   }
 
+  const linkItem = item;
+
   async function handleSave() {
     if (validationMessage) {
-      Alert.alert('입력을 확인해 주세요', validationMessage);
+      Alert.alert('입력 내용을 확인해 주세요', validationMessage);
       return;
     }
 
     try {
-      await updateLink(item.id, form);
-      Alert.alert('수정 완료', '링크 내용이 업데이트되었어요.', [
+      await updateLink(linkItem.id, form);
+      Alert.alert('수정 완료', '링크 내용을 업데이트했어요.', [
         {
           text: '확인',
           onPress: () => router.back(),
@@ -56,9 +59,12 @@ export default function EditLinkScreen() {
     <SafeAreaView style={{ backgroundColor: colors.background, flex: 1 }}>
       <Stack.Screen options={{ title: '링크 수정' }} />
       <LinkEditorForm
+        categories={categories}
+        defaultShowAdditional
         disabled={Boolean(validationMessage)}
         form={form}
         isEnriching={isEnriching}
+        mode="edit"
         onChangeField={updateField}
         onSave={handleSave}
         preview={preview}

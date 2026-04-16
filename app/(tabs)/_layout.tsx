@@ -44,7 +44,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="add"
         options={{
-          title: '링크 추가',
+          title: '추가',
           tabBarIcon: ({ color, size }) => <Ionicons color={color} name="add-circle-outline" size={size} />,
         }}
       />

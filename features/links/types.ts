@@ -47,6 +47,7 @@ export interface LinkMetadata {
 export interface LinkQueryOptions {
   platform?: LinkPlatform | 'all';
   category?: LinkCategory | 'all';
+  favoritesOnly?: boolean;
   search?: string;
   sort?: 'latest' | 'oldest' | 'favorites' | 'platform' | 'category';
 }

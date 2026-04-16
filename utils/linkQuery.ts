@@ -48,8 +48,9 @@ export function applyLinkQuery(items: LinkItem[], options: LinkQueryOptions) {
       !options.platform || options.platform === 'all' || item.detectedPlatform === options.platform;
     const categoryMatched =
       !options.category || options.category === 'all' || item.category === options.category;
+    const favoriteMatched = !options.favoritesOnly || item.isFavorite;
 
-    return platformMatched && categoryMatched && matchesSearch(item, search);
+    return platformMatched && categoryMatched && favoriteMatched && matchesSearch(item, search);
   });
 
   return sortLinks(filtered, options.sort ?? 'latest');
