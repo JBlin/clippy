@@ -11,7 +11,7 @@ export const LINK_PLATFORMS = [
 
 export type LinkPlatform = (typeof LINK_PLATFORMS)[number];
 
-export const DEFAULT_LINK_CATEGORIES = ['업무', '아이디어', '공부', '쇼핑', '나중에보기', '기타'] as const;
+export const DEFAULT_LINK_CATEGORIES = ['영상', '쇼핑', 'SNS', '읽을거리', '참고자료'] as const;
 
 export const LINK_CATEGORIES = DEFAULT_LINK_CATEGORIES;
 
@@ -32,10 +32,10 @@ export const PLATFORM_LABELS: Record<LinkPlatform, string> = {
   Instagram: 'Instagram',
   X: 'X',
   TikTok: 'TikTok',
-  Blog: 'Blog',
-  News: 'News',
-  Shopping: 'Shopping',
-  Other: 'Other',
+  Blog: '블로그',
+  News: '뉴스',
+  Shopping: '쇼핑',
+  Other: '기타',
 };
 
 export const PLATFORM_INITIALS: Record<LinkPlatform, string> = {

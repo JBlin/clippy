@@ -5,7 +5,7 @@ import { Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppButton } from '@/components/AppButton';
-import { colors, radius, spacing, textStyle } from '@/constants/theme';
+import { radius, spacing, textStyle, useThemeColors } from '@/constants/theme';
 import { useLinkStore } from '@/store/useLinkStore';
 
 function IconActionButton({
@@ -19,6 +19,8 @@ function IconActionButton({
   disabled?: boolean;
   tone?: 'default' | 'danger';
 }) {
+  const colors = useThemeColors();
+
   return (
     <Pressable
       disabled={disabled}
@@ -39,6 +41,7 @@ function IconActionButton({
 }
 
 export default function CategoryManagementScreen() {
+  const colors = useThemeColors();
   const categories = useLinkStore((state) => state.categories);
   const items = useLinkStore((state) => state.items);
   const addCategory = useLinkStore((state) => state.addCategory);
@@ -110,7 +113,7 @@ export default function CategoryManagementScreen() {
 
     Alert.alert(
       '카테고리 삭제',
-      `"${category}"를 삭제하면 해당 링크는 "${fallbackCategory}"로 옮겨져요.`,
+      `"${category}"를 삭제하면 해당 링크는 "${fallbackCategory}"로 이동해요.`,
       [
         { text: '취소', style: 'cancel' },
         {
@@ -152,7 +155,7 @@ export default function CategoryManagementScreen() {
         >
           <Text style={{ ...textStyle('800'), color: colors.text, fontSize: 16 }}>카테고리 추가</Text>
           <Text style={{ ...textStyle('400'), color: colors.textMuted, fontSize: 13, lineHeight: 19 }}>
-            추가한 카테고리는 홈, 링크 추가 화면, 보관함 필터에 바로 반영돼요.
+            추가한 카테고리는 링크 저장 화면과 보관함 필터에 바로 반영돼요.
           </Text>
           <TextInput
             onChangeText={setNewCategory}

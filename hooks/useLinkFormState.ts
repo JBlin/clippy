@@ -3,7 +3,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { DEFAULT_LINK_CATEGORIES } from '@/constants/linkOptions';
 import type { LinkFormValues, LinkItem } from '@/features/links/types';
 import { useLinkMetadata } from '@/hooks/useLinkMetadata';
-import { deriveLinkPreview } from '@/utils/url';
+import { buildAutoTags, inferAutoCategory } from '@/utils/linkAutomation';
+import { deriveLinkPreview, detectPlatform, normalizeUrl } from '@/utils/url';
 
 function getFallbackCategory(categories: string[]) {
   return categories[0] ?? DEFAULT_LINK_CATEGORIES[DEFAULT_LINK_CATEGORIES.length - 1] ?? '기타';
@@ -63,6 +64,7 @@ export function useLinkFormState(categories: string[], item?: LinkItem) {
   const { isLoading: isEnriching, metadata } = useLinkMetadata(form.originalUrl);
   const autoTitleRef = useRef(initialPreview.title);
   const autoCategoryRef = useRef(resolveCategory(initialPreview.suggestedCategory, resolvedCategories));
+  const autoTagsRef = useRef(initialPreview.suggestedTags);
   const autoSummaryRef = useRef(initialPreview.summaryTemplate);
   const autoThumbnailRef = useRef(initialPreview.thumbnailUrl);
 
@@ -70,9 +72,11 @@ export function useLinkFormState(categories: string[], item?: LinkItem) {
     setForm(initialValues);
     autoTitleRef.current = initialPreview.title;
     autoCategoryRef.current = resolveCategory(initialPreview.suggestedCategory, resolvedCategories);
+    autoTagsRef.current = initialPreview.suggestedTags;
     autoSummaryRef.current = initialPreview.summaryTemplate;
     autoThumbnailRef.current = initialPreview.thumbnailUrl;
   }, [
+    initialPreview.suggestedTags,
     initialPreview.suggestedCategory,
     initialPreview.summaryTemplate,
     initialPreview.thumbnailUrl,
@@ -97,6 +101,10 @@ export function useLinkFormState(categories: string[], item?: LinkItem) {
         !current.summary || current.summary === autoSummaryRef.current
           ? preview.summaryTemplate
           : current.summary;
+      const currentTagsSignature = current.tags.join('|');
+      const autoTagsSignature = autoTagsRef.current.join('|');
+      const nextTags =
+        !current.tags.length || currentTagsSignature === autoTagsSignature ? preview.suggestedTags : current.tags;
       const nextThumbnail =
         !current.thumbnailUrl || current.thumbnailUrl === autoThumbnailRef.current
           ? preview.thumbnailUrl
@@ -108,15 +116,18 @@ export function useLinkFormState(categories: string[], item?: LinkItem) {
         thumbnailUrl: nextThumbnail,
         title: nextTitle,
         category: nextCategory,
+        tags: nextTags,
         summary: nextSummary,
       };
     });
 
     autoTitleRef.current = preview.title;
     autoCategoryRef.current = suggestedCategory;
+    autoTagsRef.current = preview.suggestedTags;
     autoSummaryRef.current = preview.summaryTemplate;
     autoThumbnailRef.current = preview.thumbnailUrl;
   }, [
+    preview.suggestedTags,
     preview.detectedPlatform,
     preview.suggestedCategory,
     preview.summaryTemplate,
@@ -144,10 +155,34 @@ export function useLinkFormState(categories: string[], item?: LinkItem) {
     }
 
     setForm((current) => {
+      const normalizedUrl = normalizeUrl(current.originalUrl);
+      const detectedPlatform = detectPlatform(normalizedUrl);
+      const metadataDrivenTitle = metadata.title || current.title;
+      const metadataDrivenCategory = resolveCategory(
+        inferAutoCategory(normalizedUrl, detectedPlatform, metadataDrivenTitle),
+        resolvedCategories,
+      );
+      const metadataDrivenTags = buildAutoTags(normalizedUrl, detectedPlatform, metadataDrivenTitle);
+      const currentTagsSignature = current.tags.join('|');
+      const autoTagsSignature = autoTagsRef.current.join('|');
       const nextTitle =
         metadata.title && (!current.title || current.title === autoTitleRef.current)
           ? metadata.title
           : current.title;
+      const nextCategory =
+        !current.category ||
+        current.category === autoCategoryRef.current ||
+        !resolvedCategories.includes(current.category)
+          ? metadataDrivenCategory
+          : current.category;
+      const nextSummary =
+        metadata.description && (!current.summary || current.summary === autoSummaryRef.current)
+          ? metadata.description
+          : current.summary;
+      const nextTags =
+        metadataDrivenTags.length && (!current.tags.length || currentTagsSignature === autoTagsSignature)
+          ? metadataDrivenTags
+          : current.tags;
       const nextThumbnail =
         metadata.thumbnailUrl &&
         (!current.thumbnailUrl || current.thumbnailUrl === autoThumbnailRef.current)
@@ -156,6 +191,10 @@ export function useLinkFormState(categories: string[], item?: LinkItem) {
 
       return {
         ...current,
+        category: nextCategory,
+        detectedPlatform,
+        summary: nextSummary,
+        tags: nextTags,
         thumbnailUrl: nextThumbnail,
         title: nextTitle,
       };
@@ -168,7 +207,21 @@ export function useLinkFormState(categories: string[], item?: LinkItem) {
     if (metadata.thumbnailUrl) {
       autoThumbnailRef.current = metadata.thumbnailUrl;
     }
-  }, [metadata]);
+
+    if (metadata.description) {
+      autoSummaryRef.current = metadata.description;
+    }
+
+    if (metadata.title) {
+      const normalizedUrl = normalizeUrl(form.originalUrl);
+      const detectedPlatform = detectPlatform(normalizedUrl);
+      autoCategoryRef.current = resolveCategory(
+        inferAutoCategory(normalizedUrl, detectedPlatform, metadata.title),
+        resolvedCategories,
+      );
+      autoTagsRef.current = buildAutoTags(normalizedUrl, detectedPlatform, metadata.title);
+    }
+  }, [form.originalUrl, metadata, resolvedCategories]);
 
   function updateField<Key extends keyof LinkFormValues>(key: Key, value: LinkFormValues[Key]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -179,6 +232,7 @@ export function useLinkFormState(categories: string[], item?: LinkItem) {
     setForm(nextEmptyForm);
     autoTitleRef.current = '';
     autoCategoryRef.current = nextEmptyForm.category;
+    autoTagsRef.current = [];
     autoSummaryRef.current = '';
     autoThumbnailRef.current = '';
   }

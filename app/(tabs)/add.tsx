@@ -2,7 +2,7 @@ import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors } from '@/constants/theme';
+import { useThemeColors } from '@/constants/theme';
 import { LinkEditorForm } from '@/features/links/components/LinkEditorForm';
 import { validateLinkForm } from '@/features/links/utils/linkHelpers';
 import { useLinkFormState } from '@/hooks/useLinkFormState';
@@ -10,6 +10,7 @@ import { useLinkStore } from '@/store/useLinkStore';
 
 export default function AddScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const categories = useLinkStore((state) => state.categories);
   const addLink = useLinkStore((state) => state.addLink);
   const { form, isEnriching, preview, resetForm, updateField } = useLinkFormState(categories);

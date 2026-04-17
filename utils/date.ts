@@ -1,26 +1,31 @@
+function padDateUnit(value: number) {
+  return value.toString().padStart(2, '0');
+}
+
+function formatDateParts(value: string) {
+  const date = new Date(value);
+
+  return {
+    year: date.getFullYear(),
+    month: padDateUnit(date.getMonth() + 1),
+    day: padDateUnit(date.getDate()),
+    hour: padDateUnit(date.getHours()),
+    minute: padDateUnit(date.getMinutes()),
+  };
+}
+
 export function formatDateLabel(value: string) {
-  return new Intl.DateTimeFormat('ko-KR', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  }).format(new Date(value));
+  const { year, month, day } = formatDateParts(value);
+  return `${year}.${month}.${day}`;
 }
 
 export function formatCardDateLabel(value: string) {
-  return new Intl.DateTimeFormat('ko-KR', {
-    month: 'numeric',
-    day: 'numeric',
-  }).format(new Date(value));
+  return formatDateLabel(value);
 }
 
 export function formatDateTimeLabel(value: string) {
-  return new Intl.DateTimeFormat('ko-KR', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(new Date(value));
+  const { year, month, day, hour, minute } = formatDateParts(value);
+  return `${year}.${month}.${day} ${hour}:${minute}`;
 }
 
 export function isToday(value: string) {

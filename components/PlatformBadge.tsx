@@ -5,10 +5,12 @@ import type { LinkPlatform } from '@/constants/linkOptions';
 
 interface PlatformBadgeProps {
   platform: LinkPlatform;
+  size?: 'default' | 'small';
 }
 
-export function PlatformBadge({ platform }: PlatformBadgeProps) {
+export function PlatformBadge({ platform, size = 'default' }: PlatformBadgeProps) {
   const colors = platformColors[platform];
+  const compact = size === 'small';
 
   return (
     <View
@@ -17,15 +19,15 @@ export function PlatformBadge({ platform }: PlatformBadgeProps) {
         borderColor: colors.border,
         borderRadius: 999,
         borderWidth: 1,
-        paddingHorizontal: 10,
-        paddingVertical: 5,
+        paddingHorizontal: compact ? 8 : 10,
+        paddingVertical: compact ? 4 : 5,
       }}
     >
       <Text
         style={{
           ...textStyle('700'),
           color: colors.text,
-          fontSize: 12,
+          fontSize: compact ? 11 : 12,
         }}
       >
         {platform}

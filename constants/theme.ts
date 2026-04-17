@@ -1,8 +1,9 @@
 import { Platform } from 'react-native';
 
 import type { LinkPlatform } from '@/constants/linkOptions';
+import { useThemeStore, type ColorMode } from '@/store/useThemeStore';
 
-export const colors = {
+export const lightColors = {
   background: '#F6F5FF',
   surface: '#FFFFFF',
   surfaceMuted: '#F1EEFF',
@@ -22,6 +23,31 @@ export const colors = {
   successMuted: '#E8FFF5',
   shadow: 'rgba(47, 39, 124, 0.10)',
 };
+
+export const darkColors = {
+  background: '#111322',
+  surface: '#1A1F34',
+  surfaceMuted: '#232A43',
+  border: '#323B5C',
+  text: '#F5F7FF',
+  textMuted: '#CBD1ED',
+  textSoft: '#8E97BF',
+  accent: '#8D82FF',
+  accentMuted: '#2A2F57',
+  info: '#8B8FFF',
+  infoMuted: '#232A52',
+  warning: '#F2B94B',
+  warningMuted: '#3A2F1B',
+  danger: '#F98080',
+  dangerMuted: '#4A252B',
+  success: '#45C89B',
+  successMuted: '#173D35',
+  shadow: 'rgba(5, 8, 22, 0.34)',
+};
+
+export const colors = lightColors;
+
+export type AppColors = typeof lightColors;
 
 export const spacing = {
   xs: 6,
@@ -104,4 +130,29 @@ export function textStyle(weight: AppFontWeight = '400') {
     default:
       return { fontFamily: fontFamily.regular };
   }
+}
+
+export function getThemeColors(colorMode: ColorMode = 'light'): AppColors {
+  return colorMode === 'dark' ? darkColors : lightColors;
+}
+
+export function useThemeColors() {
+  const colorMode = useThemeStore((state) => state.colorMode);
+  return getThemeColors(colorMode);
+}
+
+export function useThemePreference() {
+  const colorMode = useThemeStore((state) => state.colorMode);
+  const setColorMode = useThemeStore((state) => state.setColorMode);
+  const toggleColorMode = useThemeStore((state) => state.toggleColorMode);
+  const statusBarStyle = colorMode === 'dark' ? ('light' as const) : ('dark' as const);
+
+  return {
+    colorMode,
+    colors: getThemeColors(colorMode),
+    isDarkMode: colorMode === 'dark',
+    setColorMode,
+    statusBarStyle,
+    toggleColorMode,
+  };
 }

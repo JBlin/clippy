@@ -4,16 +4,37 @@ function normalizeSearch(input: string) {
   return input.trim().toLocaleLowerCase('ko-KR');
 }
 
+function buildSearchTokens(search: string) {
+  return normalizeSearch(search)
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter(Boolean);
+}
+
 function matchesSearch(item: LinkItem, search: string) {
-  if (!search) {
+  const tokens = buildSearchTokens(search);
+
+  if (!tokens.length) {
     return true;
   }
 
-  const haystack = [item.title, item.memo, item.summary, item.tags.join(' '), item.originalUrl]
+  const haystack = [
+    item.title,
+    item.memo,
+    item.summary,
+    item.tags.join(' '),
+    item.originalUrl,
+    item.category,
+    item.detectedPlatform,
+  ]
     .join(' ')
     .toLocaleLowerCase('ko-KR');
 
-  return haystack.includes(search);
+  return tokens.every((token) => haystack.includes(token));
+}
+
+function compareByLatest(a: LinkItem, b: LinkItem) {
+  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
 }
 
 function sortLinks(items: LinkItem[], sort: LinkQueryOptions['sort']) {
@@ -25,18 +46,24 @@ function sortLinks(items: LinkItem[], sort: LinkQueryOptions['sort']) {
     case 'favorites':
       return next.sort((a, b) => {
         if (a.isFavorite === b.isFavorite) {
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          return compareByLatest(a, b);
         }
 
         return Number(b.isFavorite) - Number(a.isFavorite);
       });
     case 'platform':
-      return next.sort((a, b) => a.detectedPlatform.localeCompare(b.detectedPlatform, 'ko-KR'));
+      return next.sort((a, b) => {
+        const platformCompare = a.detectedPlatform.localeCompare(b.detectedPlatform, 'ko-KR');
+        return platformCompare || compareByLatest(a, b);
+      });
     case 'category':
-      return next.sort((a, b) => a.category.localeCompare(b.category, 'ko-KR'));
+      return next.sort((a, b) => {
+        const categoryCompare = a.category.localeCompare(b.category, 'ko-KR');
+        return categoryCompare || compareByLatest(a, b);
+      });
     case 'latest':
     default:
-      return next.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      return next.sort(compareByLatest);
   }
 }
 

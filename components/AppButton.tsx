@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, Text, View } from 'react-native';
 
-import { colors, radius, textStyle } from '@/constants/theme';
+import { radius, textStyle, useThemeColors } from '@/constants/theme';
 
 interface AppButtonProps {
   label: string;
@@ -20,6 +20,7 @@ export function AppButton({
   compact = false,
   iconName,
 }: AppButtonProps) {
+  const colors = useThemeColors();
   const styleMap = {
     primary: {
       backgroundColor: colors.accent,
@@ -57,9 +58,10 @@ export function AppButton({
         borderRadius: radius.md,
         borderWidth: 1,
         justifyContent: 'center',
+        minHeight: compact ? 42 : 50,
         opacity: pressed ? 0.88 : 1,
         paddingHorizontal: compact ? 12 : 16,
-        paddingVertical: compact ? 10 : 14,
+        paddingVertical: compact ? 8 : 13,
       })}
     >
       <View style={{ alignItems: 'center', flexDirection: 'row', gap: iconName ? 6 : 0 }}>

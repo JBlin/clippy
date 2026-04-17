@@ -1,13 +1,14 @@
 import type { ReactNode } from 'react';
 import Constants from 'expo-constants';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AppButton } from '@/components/AppButton';
-import { colors, radius, spacing, textStyle } from '@/constants/theme';
+import { FilterChips, type FilterChipOption } from '@/components/FilterChips';
+import { radius, spacing, textStyle, useThemeColors, useThemePreference } from '@/constants/theme';
 import { useLinkStore } from '@/store/useLinkStore';
+import { useThemeStore, type LinkViewMode } from '@/store/useThemeStore';
 
 function SettingsCard({
   title,
@@ -18,6 +19,8 @@ function SettingsCard({
   description: string;
   children: ReactNode;
 }) {
+  const colors = useThemeColors();
+
   return (
     <View
       style={{
@@ -39,6 +42,8 @@ function SettingsCard({
 }
 
 function ProviderBadge({ label }: { label: string }) {
+  const colors = useThemeColors();
+
   return (
     <View
       style={{
@@ -64,6 +69,8 @@ function SettingsMenuRow({
   countLabel?: string;
   onPress: () => void;
 }) {
+  const colors = useThemeColors();
+
   return (
     <Pressable
       onPress={onPress}
@@ -93,47 +100,20 @@ function SettingsMenuRow({
 }
 
 export default function SettingsScreen() {
+  const colors = useThemeColors();
+  const { colorMode, setColorMode } = useThemePreference();
   const router = useRouter();
-  const items = useLinkStore((state) => state.items);
   const categories = useLinkStore((state) => state.categories);
-  const resetAllData = useLinkStore((state) => state.resetAllData);
-  const seedDemoData = useLinkStore((state) => state.seedDemoData);
-
-  function confirmSeed() {
-    Alert.alert('데모 데이터 불러오기', '현재 저장된 링크를 데모 링크 8개로 바꿀까요?', [
-      { text: '취소', style: 'cancel' },
-      {
-        text: '불러오기',
-        style: 'default',
-        onPress: async () => {
-          try {
-            await seedDemoData();
-            Alert.alert('완료', '데모 데이터 8개를 불러왔어요.');
-          } catch (error) {
-            Alert.alert('불러오기 실패', error instanceof Error ? error.message : '데모 데이터를 불러오지 못했어요.');
-          }
-        },
-      },
-    ]);
-  }
-
-  function confirmReset() {
-    Alert.alert('전체 초기화', '저장한 링크와 카테고리 변경 내용을 모두 초기화할까요?', [
-      { text: '취소', style: 'cancel' },
-      {
-        text: '초기화',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await resetAllData();
-            Alert.alert('완료', '링크와 카테고리를 기본 상태로 되돌렸어요.');
-          } catch (error) {
-            Alert.alert('초기화 실패', error instanceof Error ? error.message : '데이터를 초기화하지 못했어요.');
-          }
-        },
-      },
-    ]);
-  }
+  const linkViewMode = useThemeStore((state) => state.linkViewMode);
+  const setLinkViewMode = useThemeStore((state) => state.setLinkViewMode);
+  const themeOptions: FilterChipOption<'light' | 'dark'>[] = [
+    { label: '라이트', value: 'light' },
+    { label: '다크', value: 'dark' },
+  ];
+  const viewModeOptions: FilterChipOption<LinkViewMode>[] = [
+    { label: '카드형', value: 'card' },
+    { label: '리스트형', value: 'list' },
+  ];
 
   return (
     <SafeAreaView edges={['top']} style={{ backgroundColor: colors.background, flex: 1 }}>
@@ -144,12 +124,12 @@ export default function SettingsScreen() {
         <View style={{ gap: 6 }}>
           <Text style={{ ...textStyle('800'), color: colors.text, fontSize: 24 }}>설정</Text>
           <Text style={{ ...textStyle('400'), color: colors.textMuted, fontSize: 14, lineHeight: 20 }}>
-            Clippy 사용 환경과 보관 방식을 깔끔하게 정리해 보세요.
+            Clippy 사용 환경과 보기 방식을 간단하게 정리해 보세요.
           </Text>
         </View>
 
         <SettingsCard
-          description="지금은 게스트 모드로 사용 중이에요. 나중에는 카카오나 네이버로 로그인해 링크를 안전하게 동기화할 수 있게 준비하고 있어요."
+          description="지금은 게스트 모드로 사용 중이에요. 추후에는 카카오나 네이버로 로그인해서 링크를 안전하게 동기화할 수 있게 준비하고 있어요."
           title="프로필"
         >
           <View style={{ alignItems: 'center', flexDirection: 'row', gap: 12 }}>
@@ -180,27 +160,44 @@ export default function SettingsScreen() {
         </SettingsCard>
 
         <SettingsCard
-          description="카테고리를 추가하거나 이름을 바꾸고, 순서도 원하는 흐름에 맞게 정리할 수 있어요."
+          description="보관함에서 링크를 카드형 또는 리스트형으로 보고, 앱 전체 테마도 함께 바꿀 수 있어요."
+          title="보기 및 테마"
+        >
+          <View style={{ gap: 8 }}>
+            <Text style={{ ...textStyle('700'), color: colors.text, fontSize: 13 }}>보기 방식</Text>
+            <FilterChips
+              activeValue={linkViewMode}
+              compact
+              onChange={(value) => setLinkViewMode(value as LinkViewMode)}
+              options={viewModeOptions}
+            />
+          </View>
+
+          <View style={{ gap: 8 }}>
+            <Text style={{ ...textStyle('700'), color: colors.text, fontSize: 13 }}>테마</Text>
+            <FilterChips
+              activeValue={colorMode}
+              compact
+              onChange={(value) => setColorMode(value as 'light' | 'dark')}
+              options={themeOptions}
+            />
+          </View>
+        </SettingsCard>
+
+        <SettingsCard
+          description="카테고리를 추가하거나 이름을 바꾸고 순서를 조정하면 추가 화면과 보관함 필터에 바로 반영돼요."
           title="카테고리 관리"
         >
           <SettingsMenuRow
             countLabel={`${categories.length}개`}
-            description="홈, 추가 화면, 보관함 필터에 바로 반영돼요."
+            description="추가·수정·삭제 결과가 링크 저장 폼과 필터에 즉시 반영돼요."
             onPress={() => router.push('/settings/categories')}
             title="카테고리 편집하기"
           />
         </SettingsCard>
 
         <SettingsCard
-          description={`현재 ${items.length}개의 링크가 이 기기에만 저장되어 있어요. 필요하면 데모 데이터로 바꾸거나 모두 초기화할 수 있어요.`}
-          title="데이터"
-        >
-          <AppButton compact label="데모 데이터 넣기" onPress={confirmSeed} variant="secondary" />
-          <AppButton compact label="전체 초기화" onPress={confirmReset} variant="danger" />
-        </SettingsCard>
-
-        <SettingsCard
-          description="Clippy는 자주 다시 볼 링크를 빠르게 저장하고 정리하는 개인용 링크 지갑이에요."
+          description="Clippy는 자주 다시 볼 링크를 빠르게 저장하고 정리하는 개인용 링크 저장 앱이에요."
           title="앱 정보"
         >
           <View style={{ gap: 6 }}>
@@ -211,7 +208,7 @@ export default function SettingsScreen() {
               저장 방식: 기기 내부 로컬 저장
             </Text>
             <Text style={{ ...textStyle('400'), color: colors.textMuted, fontSize: 13 }}>
-              이후 확장: 로그인, 클라우드 동기화, AI 요약
+              확장 예정: 로그인 동기화, AI 요약, 자동 분류 개선
             </Text>
           </View>
         </SettingsCard>

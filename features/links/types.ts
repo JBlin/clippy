@@ -34,14 +34,17 @@ export interface DerivedLinkPreview {
   thumbnailUrl: string;
   embedUrl: string;
   suggestedCategory: LinkCategory;
+  suggestedTags: string[];
   hostnameLabel: string;
   summaryTemplate: string;
 }
 
 export interface LinkMetadata {
   title?: string;
+  description?: string;
   thumbnailUrl?: string;
   embedUrl?: string;
+  sourceLabel?: string;
 }
 
 export interface LinkQueryOptions {

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Text, View } from 'react-native';
 
-import { colors, radius, textStyle } from '@/constants/theme';
+import { radius, textStyle, useThemeColors } from '@/constants/theme';
 import { AppButton } from '@/components/AppButton';
 
 interface EmptyStateProps {
@@ -21,6 +21,8 @@ export function EmptyState({
   icon = 'albums-outline',
   compact = false,
 }: EmptyStateProps) {
+  const colors = useThemeColors();
+
   return (
     <View
       style={{

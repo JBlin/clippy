@@ -1,18 +1,42 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import type { LinkMetadata } from '@/features/links/types';
-import { detectPlatform, extractYoutubeVideoId, fetchLinkMetadata, normalizeUrl } from '@/utils/url';
+import { detectPlatform, fetchLinkMetadata, normalizeUrl, safeParseUrl } from '@/utils/url';
 
-export function useLinkMetadata(input: string) {
+const metadataCache = new Map<string, LinkMetadata | null>();
+
+interface UseLinkMetadataOptions {
+  enabled?: boolean;
+  debounceMs?: number;
+}
+
+export function useLinkMetadata(input: string, options: UseLinkMetadataOptions = {}) {
   const normalizedUrl = useMemo(() => normalizeUrl(input), [input]);
+  const parsedUrl = useMemo(() => safeParseUrl(normalizedUrl), [normalizedUrl]);
   const platform = useMemo(() => detectPlatform(normalizedUrl), [normalizedUrl]);
   const [metadata, setMetadata] = useState<LinkMetadata | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const enabled = options.enabled ?? true;
+  const debounceMs = options.debounceMs ?? 350;
 
   useEffect(() => {
-    setMetadata(null);
+    if (metadataCache.has(normalizedUrl)) {
+      setMetadata(metadataCache.get(normalizedUrl) ?? null);
+    } else {
+      setMetadata(null);
+    }
 
-    if (!normalizedUrl || platform !== 'YouTube' || !extractYoutubeVideoId(normalizedUrl)) {
+    if (
+      !enabled ||
+      !normalizedUrl ||
+      !parsedUrl ||
+      (!parsedUrl.hostname.includes('.') && parsedUrl.hostname !== 'localhost')
+    ) {
+      setIsLoading(false);
+      return;
+    }
+
+    if (metadataCache.has(normalizedUrl)) {
       setIsLoading(false);
       return;
     }
@@ -25,20 +49,26 @@ export function useLinkMetadata(input: string) {
         const nextMetadata = await fetchLinkMetadata(normalizedUrl, controller.signal);
 
         if (!controller.signal.aborted) {
+          metadataCache.set(normalizedUrl, nextMetadata);
           setMetadata(nextMetadata);
+        }
+      } catch {
+        if (!controller.signal.aborted) {
+          metadataCache.set(normalizedUrl, null);
+          setMetadata(null);
         }
       } finally {
         if (!controller.signal.aborted) {
           setIsLoading(false);
         }
       }
-    }, 350);
+    }, debounceMs);
 
     return () => {
       clearTimeout(timerId);
       controller.abort();
     };
-  }, [normalizedUrl, platform]);
+  }, [debounceMs, enabled, normalizedUrl, parsedUrl, platform]);
 
   return {
     isLoading,

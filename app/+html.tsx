@@ -18,6 +18,10 @@ export default function RootHtml({ children }: { children: ReactNode }) {
         />
         <ScrollViewStyleReset />
         <style>{`
+          html, body, #root {
+            height: 100%;
+            width: 100%;
+          }
           html, body {
             margin: 0;
             padding: 0;
@@ -29,6 +33,7 @@ export default function RootHtml({ children }: { children: ReactNode }) {
           }
           #root {
             display: flex;
+            flex: 1;
             min-height: 100vh;
           }
         `}</style>

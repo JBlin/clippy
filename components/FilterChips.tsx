@@ -1,6 +1,6 @@
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
-import { colors, radius, textStyle } from '@/constants/theme';
+import { radius, spacing, textStyle, useThemeColors } from '@/constants/theme';
 
 export interface FilterChipOption<T extends string = string> {
   label: string;
@@ -20,11 +20,24 @@ export function FilterChips<T extends string>({
   onChange,
   compact = false,
 }: FilterChipsProps<T>) {
+  const colors = useThemeColors();
+
   return (
     <ScrollView
-      contentContainerStyle={{ paddingRight: 4 }}
+      alwaysBounceHorizontal={false}
+      contentContainerStyle={{
+        alignItems: 'center',
+        paddingHorizontal: spacing.xs / 2,
+        paddingRight: spacing.xs,
+      }}
+      decelerationRate="fast"
+      directionalLockEnabled
       horizontal
+      keyboardShouldPersistTaps="handled"
+      overScrollMode="never"
+      nestedScrollEnabled
       showsHorizontalScrollIndicator={false}
+      style={{ flexGrow: 0, marginHorizontal: -(spacing.xs / 2) }}
     >
       <View style={{ flexDirection: 'row', gap: 8 }}>
         {options.map((option) => {

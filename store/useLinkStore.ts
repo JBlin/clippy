@@ -38,6 +38,16 @@ function sanitizeCategoryName(name: string) {
   return name.trim();
 }
 
+function sanitizeTags(tags: string[]) {
+  return Array.from(
+    new Set(
+      tags
+        .map((tag) => tag.trim())
+        .filter(Boolean),
+    ),
+  );
+}
+
 function dedupeCategories(categories: string[]) {
   const seen = new Set<string>();
 
@@ -55,10 +65,10 @@ function dedupeCategories(categories: string[]) {
 
 function ensureCategories(categories: string[], items: LinkItem[] = []) {
   const merged = dedupeCategories([
+    ...DEFAULT_LINK_CATEGORIES,
     ...categories,
     ...items.map((item) => sanitizeCategoryName(item.category)),
   ]);
-
   return merged.length ? merged : [...DEFAULT_LINK_CATEGORIES];
 }
 
@@ -129,7 +139,7 @@ export const useLinkStore = create<LinkStoreState>((set, get) => ({
         thumbnailUrl: values.thumbnailUrl,
         summary: values.summary.trim(),
         category,
-        tags: values.tags,
+        tags: sanitizeTags(values.tags),
         memo: values.memo.trim(),
         isFavorite: values.isFavorite,
         createdAt: timestamp,
@@ -160,7 +170,7 @@ export const useLinkStore = create<LinkStoreState>((set, get) => ({
         thumbnailUrl: values.thumbnailUrl,
         summary: values.summary.trim(),
         category,
-        tags: values.tags,
+        tags: sanitizeTags(values.tags),
         memo: values.memo.trim(),
         isFavorite: values.isFavorite,
         updatedAt: new Date().toISOString(),

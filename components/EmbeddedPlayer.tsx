@@ -2,7 +2,7 @@ import { createElement } from 'react';
 import { Platform, Text, View } from 'react-native';
 
 import type { LinkPlatform } from '@/constants/linkOptions';
-import { colors, radius, textStyle } from '@/constants/theme';
+import { radius, textStyle, useThemeColors } from '@/constants/theme';
 
 interface EmbeddedPlayerProps {
   height?: number;
@@ -17,6 +17,8 @@ export function EmbeddedPlayer({
   title,
   url,
 }: EmbeddedPlayerProps) {
+  const colors = useThemeColors();
+
   if (!url) {
     return null;
   }

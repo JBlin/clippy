@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
 
-import { colors, radius, shadows, textStyle } from '@/constants/theme';
+import { radius, shadows, textStyle, useThemeColors } from '@/constants/theme';
 
 interface StatCardProps {
   label: string;
@@ -10,6 +10,8 @@ interface StatCardProps {
 }
 
 export function StatCard({ label, value, helper, compact = false }: StatCardProps) {
+  const colors = useThemeColors();
+
   return (
     <View
       style={{

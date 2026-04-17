@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, TextInput, View } from 'react-native';
 
-import { colors, radius, textStyle } from '@/constants/theme';
+import { radius, textStyle, useThemeColors } from '@/constants/theme';
 
 interface SearchBarProps {
   value: string;
@@ -15,9 +15,11 @@ export function SearchBar({
   value,
   onChangeText,
   onSubmit,
-  placeholder = '제목, 태그, 메모로 검색',
+  placeholder = '제목, URL, 태그, 메모로 검색',
   compact = false,
 }: SearchBarProps) {
+  const colors = useThemeColors();
+
   return (
     <View
       style={{

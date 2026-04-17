@@ -28,6 +28,38 @@ export function getLinkCardSnippet(item: LinkItem) {
   return summary || memo || '요약이나 메모가 아직 없는 링크예요.';
 }
 
+function truncateText(value: string, maxLength: number) {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return '';
+  }
+
+  if (trimmed.length <= maxLength) {
+    return trimmed;
+  }
+
+  return `${trimmed.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
+}
+
+export function getLinkCardTagsText(item: LinkItem, maxLength = 24) {
+  if (!item.tags.length) {
+    return '';
+  }
+
+  return truncateText(
+    item.tags
+      .filter(Boolean)
+      .map((tag) => `#${tag}`)
+      .join(' '),
+    maxLength,
+  );
+}
+
+export function getLinkCardMemoText(item: LinkItem, maxLength = 44) {
+  return truncateText(item.memo, maxLength);
+}
+
 export function countActiveQueryFilters(options: LinkQueryOptions) {
   let count = 0;
 

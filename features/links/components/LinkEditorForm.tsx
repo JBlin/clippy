@@ -8,7 +8,8 @@ import { EmbeddedPlayer } from '@/components/EmbeddedPlayer';
 import { FilterChips, type FilterChipOption } from '@/components/FilterChips';
 import { PlatformBadge } from '@/components/PlatformBadge';
 import { PreviewThumbnail } from '@/components/PreviewThumbnail';
-import { colors, platformColors, radius, spacing, textStyle } from '@/constants/theme';
+import { TagList } from '@/components/TagList';
+import { platformColors, radius, spacing, textStyle, useThemeColors } from '@/constants/theme';
 import type { DerivedLinkPreview, LinkFormValues } from '@/features/links/types';
 import { parseTagInput, stringifyTags } from '@/utils/tags';
 
@@ -38,6 +39,8 @@ function InputField({
   placeholder: string;
   multiline?: boolean;
 }) {
+  const colors = useThemeColors();
+
   return (
     <View style={{ gap: 6 }}>
       <Text style={{ ...textStyle('700'), color: colors.text, fontSize: 14 }}>{label}</Text>
@@ -77,6 +80,8 @@ function SectionCard({
   description: string;
   children: ReactNode;
 }) {
+  const colors = useThemeColors();
+
   return (
     <View
       style={{
@@ -109,6 +114,7 @@ export function LinkEditorForm({
   defaultShowAdditional = false,
   mode = 'create',
 }: LinkEditorFormProps) {
+  const colors = useThemeColors();
   const previewTitle = form.title || preview.title || '링크 미리보기';
   const activePlatformColor = platformColors[form.detectedPlatform];
   const [showAdditional, setShowAdditional] = useState(defaultShowAdditional);
@@ -183,8 +189,8 @@ export function LinkEditorForm({
                   {form.originalUrl.trim()
                     ? isEnriching
                       ? `${form.detectedPlatform} 정보를 불러오는 중이에요.`
-                      : `${form.detectedPlatform} 링크로 인식했어요.`
-                    : 'URL을 입력하면 플랫폼을 자동으로 감지해요.'}
+                      : `${form.detectedPlatform} 링크로 인식했고 카테고리/태그를 추천했어요.`
+                    : 'URL을 입력하면 플랫폼을 자동으로 감지하고 카테고리/태그를 추천해요.'}
                 </Text>
               </View>
             </View>
@@ -202,6 +208,7 @@ export function LinkEditorForm({
                 <PreviewThumbnail
                   aspectRatio={16 / 9}
                   platform={form.detectedPlatform}
+                  sourceUrl={form.originalUrl || preview.normalizedUrl}
                   subtitle={preview.hostnameLabel}
                   thumbnailUrl={form.thumbnailUrl}
                   title={previewTitle}
@@ -225,6 +232,13 @@ export function LinkEditorForm({
                 options={categoryOptions}
               />
             </View>
+
+            {form.tags.length ? (
+              <View style={{ gap: 8 }}>
+                <Text style={{ ...textStyle('700'), color: colors.text, fontSize: 14 }}>추천 태그</Text>
+                <TagList limit={6} tags={form.tags} />
+              </View>
+            ) : null}
           </SectionCard>
 
           <View

@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
 
-import { colors, radius, textStyle } from '@/constants/theme';
+import { radius, textStyle, useThemeColors } from '@/constants/theme';
 
 interface TagListProps {
   tags: string[];
@@ -8,6 +8,7 @@ interface TagListProps {
 }
 
 export function TagList({ tags, limit = 3 }: TagListProps) {
+  const colors = useThemeColors();
   const visibleTags = tags.slice(0, limit);
 
   if (!visibleTags.length) {

@@ -3,7 +3,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/components/EmptyState';
-import { colors, spacing } from '@/constants/theme';
+import { spacing, useThemeColors } from '@/constants/theme';
 import { LinkEditorForm } from '@/features/links/components/LinkEditorForm';
 import { validateLinkForm } from '@/features/links/utils/linkHelpers';
 import { useLinkFormState } from '@/hooks/useLinkFormState';
@@ -13,6 +13,7 @@ import { getSingleParam } from '@/utils/routes';
 export default function EditLinkScreen() {
   const { id: routeId } = useLocalSearchParams<{ id?: string | string[] }>();
   const router = useRouter();
+  const colors = useThemeColors();
   const id = getSingleParam(routeId);
   const categories = useLinkStore((state) => state.categories);
   const item = useLinkStore((state) => (id ? state.items.find((entry) => entry.id === id) : undefined));
